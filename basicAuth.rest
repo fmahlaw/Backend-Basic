@@ -1,0 +1,21 @@
+GET http://localhost:4000/user
+
+###
+
+POST http://localhost:4000/user/register
+Content-Type: application/json
+
+{
+    "name": "ferian",
+    "password": "password",
+    "email": "fmahlaw@gmail.com"
+}
+
+###
+POST http://localhost:4000/user/login
+Content-Type: application/json
+
+{
+     "email": "fmahlaw@gmail.com",
+    "password": "password"
+}
