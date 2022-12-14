@@ -8,8 +8,8 @@ app.use(express.json())
 
 let refreshTokensDB = []
 const port = process.env.PORT2
-const Token = process.env.Token;
-const refreshTokenkey = process.env.refresh_Token
+const token = process.env.TOKEN;
+const refreshTokenkey = process.env.REFRESH_TOKEN
 
 app.post('/token', (req,res)=>{
     const refreshToken  = req.body.token
@@ -46,7 +46,7 @@ app.post('/login', (req,res)=>{
 
 function generateAccessToken(user){
 
-    return jwt.sign(user, Token, {expiresIn: '30s'})
+    return jwt.sign(user, token, {expiresIn: '30s'})
 
 }
 
