@@ -4,24 +4,27 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import mongoStore from "connect-mongo";
 import session from "express-session";
-import { MongoClient } from "mongodb";
 dotenv.config();
 
 const { PORT, URL } = process.env;
 const app = express();
+
+const store = mongoStore.create({
+  mongoUrl: URL,
+  collectionName: "newSession",
+});
+
 app.use(
   session({
     secret: "secret",
     resave: false,
     saveUninitialized: false,
-    store: mongoStore.create({
-      mongoUrl: URL,
-      collectionName: "newSession",
-    }),
+    store,
   })
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const userSchema = new mongoose.Schema({
   name: String,
@@ -29,9 +32,12 @@ const userSchema = new mongoose.Schema({
 });
 
 const userAccount = mongoose.model("usermodels", userSchema);
-
 mongoose.set("strictQuery", false);
 mongoose.connect(URL);
+
+app.get("/dashboard", sessionAuth, (req, res) => {
+  res.send("Page");
+});
 
 app.post("/register", async (req, res) => {
   const { name, password } = req.body;
@@ -51,11 +57,8 @@ app.post("/register", async (req, res) => {
   res.status(201).json(req.session.id);
 });
 
-const client = new MongoClient(URL);
-
-app.post("/login",sessionAuth ,async (req, res) => {
+app.post("/login", sessionAuth, async (req, res) => {
   const { password, name } = req.body;
-
 
   const account = await userAccount.findOne({ name });
 
@@ -68,22 +71,13 @@ app.post("/login",sessionAuth ,async (req, res) => {
   }
 });
 
-async function sessionAuth (req,res,next){
+async function sessionAuth(req, res, next) {
   const { session } = req;
 
-  if (session.isAuth) {
-    if (
-      await client
-        .db("session")
-        .collection("newSession")
-        .findOne({ _id: session.id })
-    ) {
-      return res.send("welcome back");
-    } 
-  }
+  store.get(session.id, (err, data) => {
+    if (!data) return res.sendStatus("403");
 
-  next()
-
-
+    next();
+  });
 }
 app.listen(PORT, console.log(`lisetning to http://localhost:${PORT}`));
